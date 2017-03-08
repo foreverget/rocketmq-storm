@@ -22,7 +22,7 @@ Support message pulling model.
 ## Documentation
 Please look forward to!
 
-## Code Snippet,see [here](https://github.com/rocketmq/rocketmq-storm-alibaba/blob/master/src/main/java/com/alibaba/rocketmq/storm/topology/SimpleTopology.java)
+## Code Snippet,see [here](https://github.com/rocketmq/rocketmq-storm/blob/master/src/main/java/org/apache/rocketmq/integration/storm/topology/SimpleTopology.java)
 
 #### 
     private static final String BOLT_NAME      = "notifier";
