@@ -1,5 +1,5 @@
-rocketmq.spout.consumer.group=rocketmq
-rocketmq.spout.topic=rocketmq
+rocketmq.spout.consumer.group=von_test_consumerId
+rocketmq.spout.topic=von_test
 rocketmq.spout.topic.tag=*
 
 topology.name=rocketmq_spout

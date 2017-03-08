@@ -5,7 +5,7 @@
 rocketmq-storm allows a Storm topology to consume an RocketMQ queue as an input source. It currently provides:
 
 #### SimpleMessageSpout: 
-An simple implementation of backtype.storm.topology.IRichSpout,consumes the messages one by one.full features spout implementation exception flow control function.
+An simple implementation of org.apache.storm.topology.IRichSpout,consumes the messages one by one.full features spout implementation exception flow control function.
 
 #### BatchMessageSpout: 
 As the name implies,It handle the messages in a batch way,also with supporting reliable messages.
@@ -14,9 +14,9 @@ As the name implies,It handle the messages in a batch way,also with supporting r
 Based on batchMessageSpout,cache batch messages and emit message one by one.It is also recommendation spout at the present stage.
 
 #### RocketMQTridentSpout: 
-Based on latest trident api,but not compatible with jstorm now.
+Based on latest trident api.
 
-#### [SimplePullMessageSpout](https://github.com/rocketmq/rocketmq-storm/blob/master/src/main/java/com/alibaba/rocketmq/storm/spout/SimplePullMessageSpout.java): 
+#### SimplePullMessageSpout: 
 Support message pulling model.
 
 ## Documentation
@@ -96,12 +96,10 @@ $ mvn clean install
 
 Run it
 
-$cd target && storm jar rocketmq-storm-1.0.0-SNAPSHOT-jar-with-dependencies.jar com.alibaba.rocketmq.storm.topology.SimpleTopology
+$cd target && storm jar rocketmq-storm-1.1.0-SNAPSHOT-jar-with-dependencies.jar org.apache.rocketmq.integration.storm.topology.SimpleTopology
 
 
 ## Compatibility
-#### [RocketMQ 3.x](https://github.com/alibaba/RocketMQ)
+#### [Apache RocketMQ 4.x](https://github.com/apache/incubator-rocketmq)
 
-#### [Jstorm 0.9.X](https://github.com/alibaba/jstorm)
-
-#### [Storm 0.9.x](https://github.com/apache/storm)
+#### [Apache Storm 1.0.x](https://github.com/apache/storm)

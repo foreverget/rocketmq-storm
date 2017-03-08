@@ -30,15 +30,10 @@
         <level value="WARN"/>
         <appender-ref ref="DEFAULT"/>
     </logger>
-    <logger name="com.alibaba" additivity="false">
+    <logger name="org.apache" additivity="false">
         <level value="INFO"/>
         <appender-ref ref="DEFAULT"/>
     </logger>
-    <logger name="com.netflix.curator" additivity="false">
-        <level value="WARN"/>
-        <appender-ref ref="DEFAULT"/>
-    </logger>
-
     <root>
         <level value="INFO"/>
         <appender-ref ref="DEFAULT"/>
