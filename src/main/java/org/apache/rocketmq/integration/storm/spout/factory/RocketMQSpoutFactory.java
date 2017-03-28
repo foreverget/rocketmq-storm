@@ -26,46 +26,44 @@ import org.apache.storm.topology.IRichSpout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author Von Gosling
- */
 public final class RocketMQSpoutFactory {
-    private static final Logger LOG = LoggerFactory.getLogger(RocketMQSpoutFactory.class);
+	
+	private static final Logger LOG = LoggerFactory.getLogger(RocketMQSpoutFactory.class);
 
-    private static IRichSpout spout;
+	private static IRichSpout spout;
 
-    private static Cache<String, IRichSpout> cache = CacheBuilder.newBuilder().build();
+	private static Cache<String, IRichSpout> cache = CacheBuilder.newBuilder().build();
 
-    private static final String DEFAULT_BROKER = RocketMQSpouts.STREAM.getValue();
+	private static final String DEFAULT_BROKER = RocketMQSpouts.STREAM.getValue();
 
-    public static IRichSpout getSpout(String spoutName) {
-        RocketMQSpouts spoutType = RocketMQSpouts.fromString(spoutName);
-        switch (spoutType) {
-            case SIMPLE:
-            case BATCH:
-            case STREAM:
-                return locateSpout(spoutName);
-            default:
-                LOG.warn("Can not support this spout type {} temporarily !", spoutName);
-                return locateSpout(DEFAULT_BROKER);
+	public static IRichSpout getSpout(String spoutName) {
+		RocketMQSpouts spoutType = RocketMQSpouts.fromString(spoutName);
+		switch (spoutType) {
+		case SIMPLE:
+		case BATCH:
+		case STREAM:
+			return locateSpout(spoutName);
+		default:
+			LOG.warn("Can not support this spout type {} temporarily !", spoutName);
+			return locateSpout(DEFAULT_BROKER);
 
-        }
-    }
+		}
+	}
 
-    private static IRichSpout locateSpout(String spoutName) {
-        spout = cache.getIfPresent(spoutName);
-        if (null == spout) {
-            for (IRichSpout spoutInstance : ServiceLoader.load(IRichSpout.class)) {
-                Extension ext = spoutInstance.getClass().getAnnotation(Extension.class);
-                if (spoutName.equals(ext.value())) {
-                    spout = spoutInstance;
-                    cache.put(spoutName, spoutInstance);
-                    return spoutInstance;
-                }
-            }
-        }
+	private static IRichSpout locateSpout(String spoutName) {
+		spout = cache.getIfPresent(spoutName);
+		if (null == spout) {
+			for (IRichSpout spoutInstance : ServiceLoader.load(IRichSpout.class)) {
+				Extension ext = spoutInstance.getClass().getAnnotation(Extension.class);
+				if (spoutName.equals(ext.value())) {
+					spout = spoutInstance;
+					cache.put(spoutName, spoutInstance);
+					return spoutInstance;
+				}
+			}
+		}
 
-        return spout;
-    }
+		return spout;
+	}
 
 }

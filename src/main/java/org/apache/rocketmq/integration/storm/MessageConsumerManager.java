@@ -17,22 +17,24 @@
 
 package org.apache.rocketmq.integration.storm;
 
-import org.apache.commons.lang3.BooleanUtils;
-import org.apache.rocketmq.client.consumer.DefaultMQPullConsumer;
-import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
-import org.apache.rocketmq.client.consumer.MQConsumer;
-import org.apache.rocketmq.client.consumer.listener.MessageListener;
-import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
-import org.apache.rocketmq.client.consumer.listener.MessageListenerOrderly;
-import org.apache.rocketmq.client.exception.MQClientException;
-import org.apache.rocketmq.common.consumer.ConsumeFromWhere;
 import org.apache.rocketmq.integration.storm.domain.RocketMQConfig;
 import org.apache.rocketmq.integration.storm.internal.tools.FastBeanUtils;
+import org.apache.storm.shade.org.apache.commons.lang.BooleanUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alibaba.rocketmq.client.consumer.DefaultMQPullConsumer;
+import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
+import com.alibaba.rocketmq.client.consumer.MQConsumer;
+import com.alibaba.rocketmq.client.consumer.listener.MessageListener;
+import com.alibaba.rocketmq.client.consumer.listener.MessageListenerConcurrently;
+import com.alibaba.rocketmq.client.consumer.listener.MessageListenerOrderly;
+import com.alibaba.rocketmq.client.exception.MQClientException;
+import com.alibaba.rocketmq.common.consumer.ConsumeFromWhere;
+
 /**
- * @author Von Gosling
+ * 消息消费者管理
+ *
  */
 public class MessageConsumerManager {
 
@@ -41,6 +43,14 @@ public class MessageConsumerManager {
     MessageConsumerManager() {
     }
 
+    /**
+     * 
+     * @param config MQ配置
+     * @param listener 消息监听
+     * @param isPushlet 是否是推模型
+     * @return
+     * @throws MQClientException
+     */
     public static MQConsumer getConsumerInstance(RocketMQConfig config, MessageListener listener,
         Boolean isPushlet) throws MQClientException {
         LOG.info("Begin to init consumer,instanceName->{},configuration->{}",
@@ -49,10 +59,13 @@ public class MessageConsumerManager {
         if (BooleanUtils.isTrue(isPushlet)) {
             DefaultMQPushConsumer pushConsumer = (DefaultMQPushConsumer) FastBeanUtils.copyProperties(config,
                 DefaultMQPushConsumer.class);
+            pushConsumer.setNamesrvAddr(config.getNamesrvAddr());
             pushConsumer.setConsumerGroup(config.getGroupId());
+            // Consumer从哪里开始消费
             pushConsumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_LAST_OFFSET);
-
+            // 消费者订阅主题及Tag
             pushConsumer.subscribe(config.getTopic(), config.getTopicTag());
+            
             if (listener instanceof MessageListenerConcurrently) {
                 pushConsumer.registerMessageListener((MessageListenerConcurrently) listener);
             }
@@ -64,7 +77,7 @@ public class MessageConsumerManager {
             DefaultMQPullConsumer pullConsumer = (DefaultMQPullConsumer) FastBeanUtils.copyProperties(config,
                 DefaultMQPullConsumer.class);
             pullConsumer.setConsumerGroup(config.getGroupId());
-
+            pullConsumer.setNamesrvAddr(config.getNamesrvAddr());
             return pullConsumer;
         }
     }

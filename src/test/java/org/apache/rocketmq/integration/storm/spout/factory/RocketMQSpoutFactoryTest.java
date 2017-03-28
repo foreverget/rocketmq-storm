@@ -28,9 +28,6 @@ import static org.hamcrest.core.Is.isA;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.Assert.assertThat;
 
-/**
- * @author Von Gosling
- */
 public class RocketMQSpoutFactoryTest {
 
     @Test(expected = java.lang.NullPointerException.class)

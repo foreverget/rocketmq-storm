@@ -18,13 +18,14 @@
 package org.apache.rocketmq.integration.storm.domain;
 
 import java.util.UUID;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
-import org.apache.rocketmq.common.message.MessageExt;
 
-/**
- * @author Von Gosling
- */
+import org.apache.storm.shade.org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.storm.shade.org.apache.commons.lang.builder.ToStringStyle;
+
+import com.alibaba.rocketmq.common.message.MessageExt;
+
+
+
 public class MessageCacheItem {
     private final UUID id;
     private final MessageExt msg;

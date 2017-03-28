@@ -18,19 +18,19 @@
 package org.apache.rocketmq.integration.storm;
 
 import java.util.List;
-import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyContext;
-import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyStatus;
-import org.apache.rocketmq.client.consumer.listener.MessageListener;
-import org.apache.rocketmq.client.consumer.listener.MessageListenerOrderly;
-import org.apache.rocketmq.common.message.MessageExt;
+
 import org.apache.rocketmq.integration.storm.domain.RocketMQConfig;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * @author Von Gosling
- */
+import com.alibaba.rocketmq.client.consumer.listener.ConsumeOrderlyContext;
+import com.alibaba.rocketmq.client.consumer.listener.ConsumeOrderlyStatus;
+import com.alibaba.rocketmq.client.consumer.listener.MessageListener;
+import com.alibaba.rocketmq.client.consumer.listener.MessageListenerOrderly;
+import com.alibaba.rocketmq.common.message.MessageExt;
+
+
 public class MessagePushConsumerTest {
 
     private RocketMQConfig config;

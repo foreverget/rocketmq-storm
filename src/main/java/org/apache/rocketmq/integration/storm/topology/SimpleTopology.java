@@ -17,40 +17,40 @@
 
 package org.apache.rocketmq.integration.storm.topology;
 
-import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.rocketmq.integration.storm.bolt.RocketMqBolt;
-import org.apache.rocketmq.integration.storm.internal.tools.ConfigUtils;
 import org.apache.rocketmq.integration.storm.domain.RocketMQConfig;
 import org.apache.rocketmq.integration.storm.domain.RocketMQSpouts;
+import org.apache.rocketmq.integration.storm.internal.tools.ConfigUtils;
 import org.apache.rocketmq.integration.storm.spout.StreamMessageSpout;
 import org.apache.rocketmq.integration.storm.spout.factory.RocketMQSpoutFactory;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.StormSubmitter;
+import org.apache.storm.shade.org.apache.commons.lang.math.NumberUtils;
 import org.apache.storm.topology.BoltDeclarer;
 import org.apache.storm.topology.TopologyBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author Von Gosling
- */
 public class SimpleTopology {
+	
     private static final Logger LOG = LoggerFactory.getLogger(SimpleTopology.class);
 
     private static final String BOLT_NAME = "MQBolt";
+    
     private static final String PROP_FILE_NAME = "mqspout.default.prop";
 
     private static Config config = new Config();
+    
     private static boolean isLocalMode = true;
 
     public static void main(String[] args) throws Exception {
         TopologyBuilder builder = buildTopology(ConfigUtils.init(PROP_FILE_NAME));
-
         submitTopology(builder);
     }
 
     private static TopologyBuilder buildTopology(Config config) throws Exception {
+    	
         TopologyBuilder builder = new TopologyBuilder();
 
         int boltParallel = NumberUtils.toInt((String) config.get("topology.bolt.parallel"), 1);
@@ -59,8 +59,7 @@ public class SimpleTopology {
 
         BoltDeclarer writerBolt = builder.setBolt(BOLT_NAME, new RocketMqBolt(), boltParallel);
 
-        StreamMessageSpout defaultSpout = (StreamMessageSpout) RocketMQSpoutFactory
-            .getSpout(RocketMQSpouts.STREAM.getValue());
+        StreamMessageSpout defaultSpout = (StreamMessageSpout) RocketMQSpoutFactory.getSpout(RocketMQSpouts.STREAM.getValue());
         RocketMQConfig mqConig = (RocketMQConfig) config.get(ConfigUtils.CONFIG_ROCKETMQ);
         defaultSpout.setConfig(mqConig);
 

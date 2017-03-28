@@ -26,27 +26,32 @@ import org.apache.storm.tuple.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author Von Gosling
- */
 public class RocketMqBolt implements IRichBolt {
+	
     private static final long serialVersionUID = 7591260982890048043L;
 
     private static final Logger LOG = LoggerFactory.getLogger(RocketMqBolt.class);
 
     private OutputCollector collector;
-
+    
+    /**
+     * 在初始化的时候，只执行一次
+     */
     @Override
-    public void prepare(@SuppressWarnings("rawtypes") Map stormConf, TopologyContext context,
-        OutputCollector collector) {
+    @SuppressWarnings("rawtypes") 
+    public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
         this.collector = collector;
     }
-
+    
+    /**
+     * 逻辑执行方法
+     */
     @Override
     public void execute(Tuple input) {
         Object msgObj = input.getValue(0);
         Object msgStat = input.getValue(1);
         try {
+        	// 处理消息
             LOG.info("Messages:" + msgObj + "\n statistics:" + msgStat);
 
         } catch (Exception e) {

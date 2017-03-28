@@ -18,15 +18,16 @@
 package org.apache.rocketmq.integration.storm.domain;
 
 import java.io.Serializable;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
 
-/**
- * @author Von Gosling
- */
+import org.apache.storm.shade.org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.storm.shade.org.apache.commons.lang.builder.ToStringStyle;
+
 public class RocketMQConfig implements Serializable {
+	
     private static final long serialVersionUID = 4157424979688590880L;
-
+    
+    private String namesrvAddr;
+    
     /**
      * Unique mark for every JVM instance
      */
@@ -85,14 +86,23 @@ public class RocketMQConfig implements Serializable {
     public RocketMQConfig() {
     }
 
-    public RocketMQConfig(String consumerGroup, String topic, String topicTag) {
+    public RocketMQConfig(String namesrvAddr,String consumerGroup, String topic, String topicTag) {
         super();
+        this.namesrvAddr = namesrvAddr;
         this.groupId = consumerGroup;
         this.topic = topic;
         this.topicTag = topicTag;
     }
 
-    /**
+    public String getNamesrvAddr() {
+		return namesrvAddr;
+	}
+
+	public void setNamesrvAddr(String namesrvAddr) {
+		this.namesrvAddr = namesrvAddr;
+	}
+
+	/**
      * @return the instanceName
      */
     public String getInstanceName() {

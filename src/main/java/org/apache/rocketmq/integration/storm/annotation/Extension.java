@@ -20,9 +20,7 @@ package org.apache.rocketmq.integration.storm.annotation;
 
 import java.lang.annotation.*;
 
-/**
- * @author Von Gosling
- */
+
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})

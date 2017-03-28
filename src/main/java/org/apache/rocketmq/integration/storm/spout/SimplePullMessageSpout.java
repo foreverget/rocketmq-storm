@@ -17,14 +17,15 @@
 
 package org.apache.rocketmq.integration.storm.spout;
 
+import com.alibaba.rocketmq.client.consumer.PullResult;
+import com.alibaba.rocketmq.common.message.MessageQueue;
 import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import org.apache.rocketmq.client.consumer.PullResult;
-import org.apache.rocketmq.common.message.MessageQueue;
+
 import org.apache.rocketmq.integration.storm.MessagePullConsumer;
 import org.apache.rocketmq.integration.storm.domain.BatchMessage;
 import org.apache.rocketmq.integration.storm.domain.QueueOffsetCache;
@@ -38,27 +39,26 @@ import org.apache.storm.tuple.Values;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author von gosling
- */
 public class SimplePullMessageSpout implements IRichSpout {
+	
     private static final long serialVersionUID = -5561450001033205169L;
 
-    private static final Logger LOG = LoggerFactory
-        .getLogger(SimplePullMessageSpout.class);
-
+    private static final Logger LOG = LoggerFactory.getLogger(SimplePullMessageSpout.class);
+    
+    // 关联拉模型消费者
     private MessagePullConsumer consumer;
-
+    
     protected SpoutOutputCollector collector;
+    
     protected TopologyContext context;
-
+    // MQ配置
     private RocketMQConfig config;
 
     protected Map<UUID, BatchMessage> batchCache = new MapMaker().makeMap();
 
     @Override
-    public void open(@SuppressWarnings("rawtypes") Map conf, TopologyContext context,
-        SpoutOutputCollector collector) {
+    @SuppressWarnings("rawtypes")
+    public void open( Map conf, TopologyContext context, SpoutOutputCollector collector) {
         this.collector = collector;
         this.context = context;
         if (consumer == null) {
@@ -66,10 +66,7 @@ public class SimplePullMessageSpout implements IRichSpout {
                 config.setInstanceName(String.valueOf(context.getThisTaskId()));
                 consumer = new MessagePullConsumer(config);
                 consumer.start();
-
-                Set<MessageQueue> mqs = consumer.getConsumer().fetchSubscribeMessageQueues(
-                    config.getTopic());
-
+                Set<MessageQueue> mqs = consumer.getConsumer().fetchSubscribeMessageQueues(config.getTopic());
                 consumer.getTopicQueueMappings().put(config.getTopic(), Lists.newArrayList(mqs));
             } catch (Exception e) {
                 LOG.error("Error occurred !", e);
@@ -117,8 +114,7 @@ public class SimplePullMessageSpout implements IRichSpout {
                     case OFFSET_ILLEGAL:
                         throw new IllegalStateException("Illegal offset " + pullResult);
                     default:
-                        LOG.warn("Unconcerned status {} for result {} !",
-                            pullResult.getPullStatus(), pullResult);
+                        LOG.warn("Unconcerned status {} for result {} !",pullResult.getPullStatus(), pullResult);
                         break;
                 }
             } catch (Exception e) {

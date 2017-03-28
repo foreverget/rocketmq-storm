@@ -17,13 +17,11 @@
 
 package org.apache.rocketmq.integration.storm.domain;
 
+import com.alibaba.rocketmq.common.message.MessageQueue;
 import com.google.common.collect.Maps;
 import java.util.Map;
-import org.apache.rocketmq.common.message.MessageQueue;
 
-/**
- * @author Von Gosling
- */
+
 public class QueueOffsetCache {
 
     private static final Map<MessageQueue, Long> OFFSETCACHE = Maps.newHashMap();

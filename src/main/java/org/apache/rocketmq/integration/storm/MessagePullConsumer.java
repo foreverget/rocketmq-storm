@@ -17,23 +17,22 @@
 
 package org.apache.rocketmq.integration.storm;
 
+import com.alibaba.rocketmq.client.consumer.DefaultMQPullConsumer;
+import com.alibaba.rocketmq.client.consumer.MessageQueueListener;
+import com.alibaba.rocketmq.common.message.MessageQueue;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.apache.rocketmq.client.consumer.DefaultMQPullConsumer;
-import org.apache.rocketmq.client.consumer.MessageQueueListener;
-import org.apache.rocketmq.common.message.MessageQueue;
+
 import org.apache.rocketmq.integration.storm.domain.RocketMQConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author Von Gosling
- */
 public class MessagePullConsumer implements Serializable, MessageQueueListener {
+	
     private static final long serialVersionUID = 4641537253577312163L;
 
     private static final Logger LOG = LoggerFactory.getLogger(MessagePullConsumer.class);
@@ -51,27 +50,35 @@ public class MessagePullConsumer implements Serializable, MessageQueueListener {
     public MessagePullConsumer(RocketMQConfig config) {
         this.config = config;
     }
-
+    
     public void start() throws Exception {
+    	// 创建拉模型的消费者
         consumer = (DefaultMQPullConsumer) MessageConsumerManager.getConsumerInstance(config, null, false);
-
+        // 在topic上注册监听
         consumer.registerMessageQueueListener(config.getTopic(), this);
-
+        // 初始化消费者
         this.consumer.start();
-
         LOG.info("Init consumer successfully,configuration->{} !", config);
     }
-
+    
+    /**
+     * 停止
+     */
     public void shutdown() {
         consumer.shutdown();
-
         LOG.info("Successfully shutdown consumer {} !", config);
     }
-
+    
+    /**
+     * 暂停
+     */
     public void suspend() {
         LOG.info("Nothing to do for pull consumer !");
     }
 
+    /**
+     * 恢复
+     */
     public void resume() {
         LOG.info("Nothing to do for pull consumer !");
     }
@@ -84,9 +91,7 @@ public class MessagePullConsumer implements Serializable, MessageQueueListener {
     public void messageQueueChanged(String topic, Set<MessageQueue> mqAll,
         Set<MessageQueue> mqDivided) {
         if (topicQueueMappings.get(topic) != null) {
-
             LOG.info("Queue changed from {} to {} !", mqAll, mqDivided);
-
             topicQueueMappings.put(topic, Lists.newArrayList(mqDivided));
         }
     }

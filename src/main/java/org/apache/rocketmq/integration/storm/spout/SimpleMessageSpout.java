@@ -17,17 +17,11 @@
 
 package org.apache.rocketmq.integration.storm.spout;
 
-import com.google.common.collect.MapMaker;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
-import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
-import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
-import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
-import org.apache.rocketmq.common.Pair;
-import org.apache.rocketmq.common.message.MessageExt;
+
 import org.apache.rocketmq.integration.storm.MessagePushConsumer;
 import org.apache.rocketmq.integration.storm.annotation.Extension;
 import org.apache.rocketmq.integration.storm.domain.MessageStat;
@@ -41,22 +35,30 @@ import org.apache.storm.tuple.Values;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author Von Gosling
- */
+import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
+import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
+import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
+import com.alibaba.rocketmq.client.consumer.listener.MessageListenerConcurrently;
+import com.alibaba.rocketmq.common.Pair;
+import com.alibaba.rocketmq.common.message.MessageExt;
+import com.google.common.collect.MapMaker;
+
 @Extension("simple")
 public class SimpleMessageSpout implements IRichSpout, MessageListenerConcurrently {
+	
     private static final long serialVersionUID = -2277714452693486954L;
 
-    private static final Logger LOG = LoggerFactory
-        .getLogger(SimpleMessageSpout.class);
-
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleMessageSpout.class);
+    
     private MessagePushConsumer consumer;
 
     private SpoutOutputCollector collector;
+    
     private TopologyContext context;
 
+    // 失败阻塞队列
     private BlockingQueue<Pair<MessageExt, MessageStat>> failureQueue = new LinkedBlockingQueue<Pair<MessageExt, MessageStat>>();
+    
     private Map<String, Pair<MessageExt, MessageStat>> failureMsgs;
 
     private RocketMQConfig config;
@@ -65,16 +67,22 @@ public class SimpleMessageSpout implements IRichSpout, MessageListenerConcurrent
         this.config = config;
     }
 
-    public void open(@SuppressWarnings("rawtypes") Map conf, TopologyContext context,
-        SpoutOutputCollector collector) {
+    /**
+     * 初始化时，只执行一次
+     * 初始化消费者
+     */
+    @SuppressWarnings("rawtypes") 
+    public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         this.collector = collector;
         this.context = context;
+        // Builds a thread-safe map
         this.failureMsgs = new MapMaker().makeMap();
+        // 初始化消费者
         if (consumer == null) {
             try {
+            	// Unique mark for every JVM instance，Gets the task id of this task.
                 config.setInstanceName(String.valueOf(context.getThisTaskId()));
                 consumer = new MessagePushConsumer(config);
-
                 consumer.start(this);
             } catch (Exception e) {
                 LOG.error("Failed to init consumer !", e);
@@ -82,8 +90,15 @@ public class SimpleMessageSpout implements IRichSpout, MessageListenerConcurrent
             }
         }
     }
-
+    /**
+     * Called when an ISpout is going to be shutdown. There is no guarentee that close
+     * will be called, because the supervisor kill -9's worker processes on the cluster.
+     *
+     * The one context where close is guaranteed to be called is a topology is
+     * killed when running Storm in local mode.
+     */
     public void close() {
+    	// 如果存在失败消息，记录失败消息
         if (!failureMsgs.isEmpty()) {
             for (Map.Entry<String, Pair<MessageExt, MessageStat>> entry : failureMsgs.entrySet()) {
                 Pair<MessageExt, MessageStat> pair = entry.getValue();
@@ -91,16 +106,22 @@ public class SimpleMessageSpout implements IRichSpout, MessageListenerConcurrent
                     new Object[] {pair.getObject1(), pair.getObject2()});
             }
         }
-
+        
+        // 关闭消费者进程
         if (consumer != null) {
             consumer.shutdown();
         }
     }
 
+    /**
+     * 状态变为活动时触发，恢复消费者进程
+     */
     public void activate() {
         consumer.resume();
     }
-
+    /**
+     * 状态变为非活动时触发，暂停消费者进程
+     */
     public void deactivate() {
         consumer.suspend();
     }
@@ -120,15 +141,12 @@ public class SimpleMessageSpout implements IRichSpout, MessageListenerConcurrent
         if (pair == null) {
             return;
         }
-
         pair.getObject2().setElapsedTime();
-        collector.emit(new Values(pair.getObject1(), pair.getObject2()), pair.getObject1()
-            .getMsgId());
+        collector.emit(new Values(pair.getObject1(), pair.getObject2()), pair.getObject1().getMsgId());
     }
 
     public void ack(Object id) {
         String msgId = (String) id;
-
         failureMsgs.remove(msgId);
     }
 
@@ -173,21 +191,35 @@ public class SimpleMessageSpout implements IRichSpout, MessageListenerConcurrent
             }
         }
     }
-
-    public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs,
-        ConsumeConcurrentlyContext context) {
+    
+    /**
+     * 消费消息
+     */
+    public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
         try {
-            for (MessageExt msg : msgs) {
-                MessageStat msgStat = new MessageStat();
-                collector.emit(new Values(msg, msgStat), msg.getMsgId());
-            }
+	        for (MessageExt msg : msgs) {
+	            MessageStat msgStat = new MessageStat();
+	            System.out.println("========******============"+ byteArrayToStr(msg.getBody()));
+	            collector.emit(new Values(msg, msgStat), msg.getMsgId());
+	        }
         } catch (Exception e) {
             LOG.error("Failed to emit message {} in context {},caused by {} !", msgs, this.context.getThisTaskId(), e.getCause());
             return ConsumeConcurrentlyStatus.RECONSUME_LATER;
         }
         return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
     }
+    
+    public static String byteArrayToStr(byte[] byteArray) {
+        if (byteArray == null) {
+            return null;
+        }
+        String str = new String(byteArray);
+        return str;
+    }
 
+    /**
+     * Declare the output schema for all the streams of this topology.
+     */
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         Fields fields = new Fields("MessageExt", "MessageStat");
         declarer.declare(fields);

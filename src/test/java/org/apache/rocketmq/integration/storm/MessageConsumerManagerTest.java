@@ -17,21 +17,21 @@
 
 package org.apache.rocketmq.integration.storm;
 
-import mockit.Mocked;
-import org.apache.rocketmq.client.consumer.DefaultMQPullConsumer;
-import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
-import org.apache.rocketmq.client.consumer.MQConsumer;
-import org.apache.rocketmq.client.consumer.listener.MessageListener;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
+import static org.junit.Assert.assertThat;
+
 import org.apache.rocketmq.integration.storm.domain.RocketMQConfig;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.hamcrest.core.IsInstanceOf.instanceOf;
-import static org.junit.Assert.assertThat;
+import com.alibaba.rocketmq.client.consumer.DefaultMQPullConsumer;
+import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
+import com.alibaba.rocketmq.client.consumer.MQConsumer;
+import com.alibaba.rocketmq.client.consumer.listener.MessageListener;
 
-/**
- * @author Von Gosling
- */
+import mockit.Mocked;
+
+
 public class MessageConsumerManagerTest {
 
     private RocketMQConfig config;

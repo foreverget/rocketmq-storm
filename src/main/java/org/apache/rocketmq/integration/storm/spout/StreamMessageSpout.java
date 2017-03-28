@@ -17,7 +17,6 @@
 
 package org.apache.rocketmq.integration.storm.spout;
 
-import com.google.common.collect.Sets;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -25,12 +24,11 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
-import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.integration.storm.annotation.Extension;
 import org.apache.rocketmq.integration.storm.domain.BatchMessage;
 import org.apache.rocketmq.integration.storm.domain.MessageCacheItem;
+import org.apache.storm.shade.org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.storm.shade.org.apache.commons.lang.builder.ToStringStyle;
 import org.apache.storm.spout.SpoutOutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
@@ -40,9 +38,9 @@ import org.apache.storm.utils.RotatingMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author Von Gosling
- */
+import com.alibaba.rocketmq.common.message.MessageExt;
+import com.google.common.collect.Sets;
+
 @Extension("stream")
 public class StreamMessageSpout extends BatchMessageSpout {
     private static final long serialVersionUID = 464153253576782163L;

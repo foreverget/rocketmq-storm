@@ -17,7 +17,6 @@
 
 package org.apache.rocketmq.integration.storm;
 
-import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.integration.storm.domain.RocketMQConfig;
 import org.apache.rocketmq.integration.storm.internal.tools.ConfigUtils;
 import org.apache.rocketmq.integration.storm.trident.RocketMQTridentSpout;
@@ -32,9 +31,8 @@ import org.apache.storm.tuple.Fields;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author Von Gosling
- */
+import com.alibaba.rocketmq.client.exception.MQClientException;
+
 public class TransactionalTopologyDemo {
 
     public static final Logger LOG = LoggerFactory.getLogger(TransactionalTopologyDemo.class);
@@ -42,6 +40,7 @@ public class TransactionalTopologyDemo {
     private static final String PROP_FILE_NAME = "mqspout.test.prop";
 
     public static StormTopology buildTopology() throws MQClientException {
+    	
         TridentTopology topology = new TridentTopology();
 
         Config config = ConfigUtils.init(PROP_FILE_NAME);

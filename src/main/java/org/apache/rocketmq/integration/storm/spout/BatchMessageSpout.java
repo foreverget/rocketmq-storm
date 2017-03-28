@@ -17,6 +17,15 @@
 
 package org.apache.rocketmq.integration.storm.spout;
 
+import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
+import com.alibaba.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
+import com.alibaba.rocketmq.client.consumer.listener.ConsumeOrderlyContext;
+import com.alibaba.rocketmq.client.consumer.listener.ConsumeOrderlyStatus;
+import com.alibaba.rocketmq.client.consumer.listener.MessageListener;
+import com.alibaba.rocketmq.client.consumer.listener.MessageListenerConcurrently;
+import com.alibaba.rocketmq.client.consumer.listener.MessageListenerOrderly;
+import com.alibaba.rocketmq.common.message.MessageExt;
+import com.alibaba.rocketmq.common.message.MessageQueue;
 import com.google.common.collect.MapMaker;
 import java.util.List;
 import java.util.Map;
@@ -24,15 +33,6 @@ import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
-import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
-import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyContext;
-import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyStatus;
-import org.apache.rocketmq.client.consumer.listener.MessageListener;
-import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
-import org.apache.rocketmq.client.consumer.listener.MessageListenerOrderly;
-import org.apache.rocketmq.common.message.MessageExt;
-import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.integration.storm.MessagePushConsumer;
 import org.apache.rocketmq.integration.storm.annotation.Extension;
 import org.apache.rocketmq.integration.storm.domain.BatchMessage;
@@ -47,15 +47,13 @@ import org.apache.storm.tuple.Values;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author Von Gosling
- */
 @Extension("batch")
 public class BatchMessageSpout implements IRichSpout {
+	
     private static final long serialVersionUID = 4641537253577312163L;
 
-    private static final Logger LOG = LoggerFactory
-        .getLogger(BatchMessageSpout.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BatchMessageSpout.class);
+    
     protected RocketMQConfig config;
 
     protected MessagePushConsumer mqClient;
@@ -65,6 +63,7 @@ public class BatchMessageSpout implements IRichSpout {
     protected SpoutOutputCollector collector;
 
     protected final BlockingQueue<BatchMessage> batchQueue = new LinkedBlockingQueue<BatchMessage>();
+    
     protected Map<UUID, BatchMessage> cache = new MapMaker().makeMap();
 
     public void setConfig(RocketMQConfig config) {
@@ -72,24 +71,19 @@ public class BatchMessageSpout implements IRichSpout {
     }
 
     @SuppressWarnings("rawtypes")
-    public void open(final Map conf, final TopologyContext context,
-        final SpoutOutputCollector collector) {
+    public void open(final Map conf, final TopologyContext context, final SpoutOutputCollector collector) {
         this.collector = collector;
-
         this.topologyName = (String) conf.get(Config.TOPOLOGY_NAME);
-
         if (mqClient == null) {
             try {
                 config.setInstanceName(String.valueOf(context.getThisTaskId()));
                 mqClient = new MessagePushConsumer(config);
-
                 mqClient.start(buildMessageListener());
             } catch (Throwable e) {
                 LOG.error("Failed to init consumer !", e);
                 throw new RuntimeException(e);
             }
         }
-
         LOG.info("Topology {} opened {} spout successfully!",
             new Object[] {topologyName, config.getTopic()});
     }
@@ -132,9 +126,7 @@ public class BatchMessageSpout implements IRichSpout {
 
     protected void handleFail(UUID batchId) {
         BatchMessage msg = cache.get(batchId);
-
         LOG.info("Failed to handle {} !", msg);
-
         int failureTimes = msg.getMessageStat().getFailureTimes().incrementAndGet();
         if (config.getMaxFailTimes() < 0 || failureTimes < config.getMaxFailTimes()) {
             batchQueue.offer(msg);
@@ -142,7 +134,6 @@ public class BatchMessageSpout implements IRichSpout {
             LOG.info("Skip message {} !", msg);
             finish(batchId);
         }
-
     }
 
     public void fail(final Object id) {
@@ -195,8 +186,7 @@ public class BatchMessageSpout implements IRichSpout {
             MessageListener listener = new MessageListenerOrderly() {
                 public ConsumeOrderlyStatus consumeMessage(List<MessageExt> msgs,
                     ConsumeOrderlyContext context) {
-                    boolean isSuccess = BatchMessageSpout.this.consumeMessage(msgs,
-                        context.getMessageQueue());
+                    boolean isSuccess = BatchMessageSpout.this.consumeMessage(msgs,context.getMessageQueue());
                     if (isSuccess) {
                         return ConsumeOrderlyStatus.SUCCESS;
                     } else {
@@ -208,10 +198,8 @@ public class BatchMessageSpout implements IRichSpout {
             return listener;
         } else {
             MessageListener listener = new MessageListenerConcurrently() {
-                public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs,
-                    ConsumeConcurrentlyContext context) {
-                    boolean isSuccess = BatchMessageSpout.this.consumeMessage(msgs,
-                        context.getMessageQueue());
+                public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
+                    boolean isSuccess = BatchMessageSpout.this.consumeMessage(msgs,context.getMessageQueue());
                     if (isSuccess) {
                         return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
                     } else {
@@ -226,6 +214,7 @@ public class BatchMessageSpout implements IRichSpout {
     }
 
     public boolean consumeMessage(List<MessageExt> msgs, MessageQueue mq) {
+    	
         LOG.info("Receiving {} messages {} from MQ {} !", msgs.size(), msgs, mq);
 
         if (msgs.isEmpty()) {

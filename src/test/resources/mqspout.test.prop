@@ -1,5 +1,6 @@
-rocketmq.spout.consumer.group=rocketmq-demo-group
-rocketmq.spout.topic=test
+rocketmq.spout.namesrv.addr=192.168.233.130:9876;192.168.233.131:9876
+rocketmq.spout.consumer.group=PushConsumer
+rocketmq.spout.topic=PushTopic
 rocketmq.spout.topic.tag=*
 
 

@@ -22,34 +22,32 @@ import net.sf.cglib.beans.BeanCopier;
 import net.sf.cglib.core.Converter;
 import net.sf.cglib.core.ReflectUtils;
 
-/**
- * High performance JavaBean attribute copy tool
- *
- * @author von gosling 2011-12-24 3:58:02
- */
 public abstract class FastBeanUtils {
-    public static Object copyProperties(Object source, Class<?> target) {
-        Preconditions.checkNotNull(source, "Source must not be null!");
-        Preconditions.checkNotNull(target, "Target must not be null!");
+	
+	public static Object copyProperties(Object source, Class<?> target) {
+		
+		Preconditions.checkNotNull(source, "Source must not be null!");
+		Preconditions.checkNotNull(target, "Target must not be null!");
 
-        Object targetObject = ReflectUtils.newInstance(target);
-        BeanCopier beanCopier = BeanCopier.create(source.getClass(), target, false);
-        beanCopier.copy(source, targetObject, null);
+		Object targetObject = ReflectUtils.newInstance(target);
+		BeanCopier beanCopier = BeanCopier.create(source.getClass(), target, false);
+		beanCopier.copy(source, targetObject, null);
 
-        return targetObject;
-    }
+		return targetObject;
+	}
 
-    public static Object copyProperties(Object source, Class<?> target, Converter converter) {
-        Preconditions.checkNotNull(source, "Source must not be null");
-        Preconditions.checkNotNull(target, "Target must not be null");
+	public static Object copyProperties(Object source, Class<?> target, Converter converter) {
+		
+		Preconditions.checkNotNull(source, "Source must not be null");
+		Preconditions.checkNotNull(target, "Target must not be null");
 
-        Object targetObject = ReflectUtils.newInstance(target);
-        BeanCopier beanCopier = BeanCopier.create(source.getClass(), target, true);
-        beanCopier.copy(source, targetObject, converter);
+		Object targetObject = ReflectUtils.newInstance(target);
+		BeanCopier beanCopier = BeanCopier.create(source.getClass(), target, true);
+		beanCopier.copy(source, targetObject, converter);
 
-        return targetObject;
-    }
+		return targetObject;
+	}
 
-    private FastBeanUtils() {
-    }
+	private FastBeanUtils() {
+	}
 }

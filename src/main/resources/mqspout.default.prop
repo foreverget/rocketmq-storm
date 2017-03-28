@@ -1,7 +1,15 @@
+#Storm configuration key used to determine the rocketmq consumer group
 rocketmq.spout.consumer.group=von_test_consumerId
+#Storm configuration key used to determine the rocketmq topic to read from
 rocketmq.spout.topic=von_test
+#Storm configuration key used to determine the rocketmq topic tag
 rocketmq.spout.topic.tag=*
+#Consumption of local sequence, will affect performance
+rocketmq.spout.ordered=false
+#The message size from server for every pull batch
+rocketmq.prefetch.size=1
 
+# 拓扑名称
 topology.name=rocketmq_spout
 topology.spout.parallel=1
 topology.bolt.parallel=1
@@ -11,5 +19,4 @@ topology.workers=5
 topology.max.spout.pending=100
 topology.message.timeout.secs=60
 
-rocketmq.spout.ordered=false
-rocketmq.prefetch.size=1
+

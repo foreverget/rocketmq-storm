@@ -17,7 +17,6 @@
 
 package org.apache.rocketmq.integration.storm;
 
-import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.rocketmq.integration.storm.bolt.RocketMqBolt;
 import org.apache.rocketmq.integration.storm.domain.RocketMQConfig;
 import org.apache.rocketmq.integration.storm.domain.RocketMQSpouts;
@@ -28,72 +27,98 @@ import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.StormSubmitter;
 import org.apache.storm.generated.StormTopology;
+import org.apache.storm.shade.org.apache.commons.lang.math.NumberUtils;
 import org.apache.storm.topology.BoltDeclarer;
 import org.apache.storm.topology.TopologyBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author Von Gosling
- */
 public class SimpleTopologyDemo {
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleTopologyDemo.class);
+	
+	private static final Logger LOG = LoggerFactory.getLogger(SimpleTopologyDemo.class);
 
-    private static final String BOLT_NAME = "notifier";
-    private static final String PROP_FILE_NAME = "mqspout.test.prop";
+	private static final String BOLT_NAME = "notifier";
+	private static final String PROP_FILE_NAME = "mqspout.test.prop";
 
-    private static Config conf = new Config();
-    private static boolean isLocalMode = true;
+	private static Config conf = new Config();
+	private static boolean isLocalMode = true;
 
-    public static void main(String[] args) throws Exception {
-        TopologyBuilder builder = buildTopology(ConfigUtils.init(PROP_FILE_NAME));
+	public static void main(String[] args) throws Exception {
+		
+		TopologyBuilder builder = buildTopology(ConfigUtils.init(PROP_FILE_NAME));
 
-        submitTopology(builder);
-    }
+		submitTopology(builder);
+	}
 
-    private static TopologyBuilder buildTopology(Config config) throws Exception {
-        TopologyBuilder builder = new TopologyBuilder();
+	/**
+	 * 创建拓扑
+	 * 
+	 * @param config
+	 * @return
+	 * @throws Exception
+	 */
+	private static TopologyBuilder buildTopology(Config config) throws Exception {
+		
+		TopologyBuilder builder = new TopologyBuilder();
 
-        int boltParallel = NumberUtils.toInt((String) config.get("topology.bolt.parallel"), 1);
+		// 并发数默认为1（Executor 线程数）
+		int boltParallel = NumberUtils.toInt((String) config.get("topology.bolt.parallel"), 1);
 
-        int spoutParallel = NumberUtils.toInt((String) config.get("topology.spout.parallel"), 1);
+		int spoutParallel = NumberUtils.toInt((String) config.get("topology.spout.parallel"), 1);
+		
+		// 定义Bolt
+		BoltDeclarer writerBolt = builder.setBolt(BOLT_NAME, new RocketMqBolt(), boltParallel);
+		
+		// 创建默认spout
+		SimpleMessageSpout defaultSpout = (SimpleMessageSpout) RocketMQSpoutFactory.getSpout(RocketMQSpouts.SIMPLE.getValue());
+		// 获取MQ配置对象
+		RocketMQConfig mqConig = (RocketMQConfig) config.get(ConfigUtils.CONFIG_ROCKETMQ);
+		
+		defaultSpout.setConfig(mqConig);
 
-        BoltDeclarer writerBolt = builder.setBolt(BOLT_NAME, new RocketMqBolt(), boltParallel);
+		String id = (String) config.get(ConfigUtils.CONFIG_TOPIC);
+		
+		// 定义spout，id为指定的topic值
+		builder.setSpout(id, defaultSpout, spoutParallel);
 
-        SimpleMessageSpout defaultSpout = (SimpleMessageSpout) RocketMQSpoutFactory
-            .getSpout(RocketMQSpouts.SIMPLE.getValue());
-        RocketMQConfig mqConig = (RocketMQConfig) config.get(ConfigUtils.CONFIG_ROCKETMQ);
-        defaultSpout.setConfig(mqConig);
+		// 随机分发到writerBolt
+		writerBolt.shuffleGrouping(id);
+		
+		return builder;
+	}
 
-        String id = (String) config.get(ConfigUtils.CONFIG_TOPIC);
-        builder.setSpout(id, defaultSpout, spoutParallel);
+	/**
+	 * 提交拓扑
+	 * 
+	 * @param builder
+	 */
+	private static void submitTopology(TopologyBuilder builder) {
+		try {
+			// 获取拓扑名称
+			String topologyName = String.valueOf(conf.get("topology.name"));
+			// 创建拓扑
+			StormTopology topology = builder.createTopology();
+			
+			// 本地模式
+			if (isLocalMode == true) {
+				LocalCluster cluster = new LocalCluster();
+				
+				conf.put(Config.STORM_CLUSTER_MODE, "local");
+				
+				cluster.submitTopology(topologyName, conf, topology);
 
-        writerBolt.shuffleGrouping(id);
-        return builder;
-    }
+				Thread.sleep(50000);
+				// 停止拓扑
+				cluster.killTopology(topologyName);
+				// 停止集群
+				cluster.shutdown();
+			} else {
+				conf.put(Config.STORM_CLUSTER_MODE, "distributed");
+				StormSubmitter.submitTopology(topologyName, conf, topology);
+			}
 
-    private static void submitTopology(TopologyBuilder builder) {
-        try {
-            String topologyName = String.valueOf(conf.get("topology.name"));
-            StormTopology topology = builder.createTopology();
-
-            if (isLocalMode == true) {
-                LocalCluster cluster = new LocalCluster();
-                conf.put(Config.STORM_CLUSTER_MODE, "local");
-
-                cluster.submitTopology(topologyName, conf, topology);
-
-                Thread.sleep(50000);
-
-                cluster.killTopology(topologyName);
-                cluster.shutdown();
-            } else {
-                conf.put(Config.STORM_CLUSTER_MODE, "distributed");
-                StormSubmitter.submitTopology(topologyName, conf, topology);
-            }
-
-        } catch (Exception e) {
-            LOG.error(e.getMessage(), e.getCause());
-        }
-    }
+		} catch (Exception e) {
+			LOG.error(e.getMessage(), e.getCause());
+		}
+	}
 }
